@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from "@nestjs/common";
+import { Controller, Get, Post, Put, Delete,  Body, Param, UseGuards } from "@nestjs/common";
 import { ServerService } from "./server.service";
 import { CreateServerDto } from "./dto/create-server.dto";
 import { ServerJoinGuard } from "src/guards/server.guard";
@@ -48,5 +48,29 @@ export class ServerController {
       body.userId,
       body.inviteLink,
     );
+  }
+  @Put("/update/:id")
+  @UseGuards(ServerJoinGuard)  // Ensure the user is part of the server
+  updateServer(
+    @Param("id") serverId: string,
+    @Body() updateServerDto: Partial<CreateServerDto>,
+    @Body("userId") userId: string
+  ) {
+    return this.serverService.updateServer(serverId, updateServerDto, userId);
+  }
+  @Post("/leave")
+  @UseGuards(ServerJoinGuard) // Ensure the user is part of the server
+  leaveServer(@Body() body: { userId: string; serverId: string }) {
+    return this.serverService.leaveServer(body.serverId, body.userId);
+  }
+
+  // New route to delete a server
+  @Delete("/delete/:id")
+  @UseGuards(ServerJoinGuard)  // Ensure the user is part of the server
+  deleteServer(
+    @Param("id") serverId: string,
+    @Body("userId") userId: string
+  ) {
+    return this.serverService.deleteServer(serverId, userId);
   }
 }

@@ -268,4 +268,100 @@ export class ServerService {
       };
     }
   }
+  async updateServer(serverId: string, updateServerDto: Partial<CreateServerDto>, userId: string) {
+    try {
+      // Find the server by ID
+      const server = await this.serverRepository.findOne({
+        where: { id: serverId },
+      });
+  
+      if (!server) {
+        return {
+          message: "Server not found",
+          status: false,
+        };
+      }
+  
+      // Check if the user has permission to update the server
+      if (server.owner !== userId) {
+        return {
+          message: "You don't have permission to update this server",
+          status: false,
+        };
+      }
+  
+      // Merge the new updates into the server entity
+      const updatedServer = this.serverRepository.merge(server, updateServerDto);
+  
+      // Save the updated server
+      await this.serverRepository.save(updatedServer);
+  
+      return {
+        message: "Server updated successfully",
+        status: true,
+        server: updatedServer,
+      };
+    } catch (error) {
+      return {
+        message: "Error updating server",
+        status: false,
+      };
+    }
+  }
+  async leaveServer(serverId: string, userId: string) {
+    try {
+      // Find the join server entry for the user
+      const joinServerEntry = await this.joinServerRepository.findOne({
+        where: { serverId, userId },
+      });
+
+      if (!joinServerEntry) {
+        return {message: "User is not part of this server"};
+      }
+
+      // Remove the user from the server
+      await this.joinServerRepository.remove(joinServerEntry);
+
+      return { message: "Successfully left the server" };
+    } catch (error) {
+      console.log("Something wrong", error);
+      return {message: "Something went wrong while leaving the server"};
+    }
+  }
+  async deleteServer(serverId: string, userId: string) {
+    try {
+      // Find the server by ID
+      const server = await this.serverRepository.findOne({
+        where: { id: serverId },
+      });
+  
+      if (!server) {
+        return {
+          message: "Server not found",
+          status: false,
+        };
+      }
+  
+      // Check if the user has permission to delete the server
+      if (server.owner !== userId) {
+        return {
+          message: "You don't have permission to delete this server",
+          status: false,
+        };
+      }
+  
+      // Delete the server
+      await this.serverRepository.delete(serverId);
+  
+      return {
+        message: "Server deleted successfully",
+        status: true,
+      };
+    } catch (error) {
+      return {
+        message: "Error deleting server",
+        status: false,
+      };
+    }
+  }
 }
